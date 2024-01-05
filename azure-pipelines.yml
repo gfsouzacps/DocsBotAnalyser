@@ -1,0 +1,40 @@
+name: Python-CI
+
+trigger:
+- main
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+jobs:
+- job: Build
+  displayName: 'Construir Projeto'
+  
+  pool:
+    vmImage: 'ubuntu-latest'
+
+  steps:
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: '3.x' # Versão do Python que será utilizada
+
+  - script: |
+      python -m pip install --upgrade pip
+      pip install -r requirements.txt
+    displayName: 'Instalar dependências'
+
+  - script: |
+      python -m unittest discover -v
+    displayName: 'Executar Testes'
+
+  - task: ArchiveFiles@2
+    inputs:
+      rootFolderOrFile: '$(System.DefaultWorkingDirectory)'
+      includeRootFolder: false
+      archiveType: 'zip'
+      archiveFile: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip'
+      replaceExistingArchive: true
+
+  - publish: $(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip
+    artifact: drop
+    displayName: 'Publicar Artefato'
